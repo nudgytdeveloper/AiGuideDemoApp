@@ -63,21 +63,22 @@ app.get('/', async (req, res) => {
   }
 });
 
-app.get('/generate', async (_req, res) => {
-  const payload = generateSessionId();
-  let persisted = false, error = null,
-  initalData = "Initial Data - tony"
+app.get('/generate', async (req, res) => {
+  const providedChatData = req.query.chatData,
+    initialData = providedChatData || "Initial Data - tony",
+    payload = generateSessionId()
+  let persisted = false, error = null
   if (db) {
     try {
       await db.collection('sessions').doc(payload.sessionId).set({
         issuedAt: payload.issuedAt,
         createdAt: FieldValue.serverTimestamp(),
-        chatData: initalData
+        chatData: initialData
       });
       persisted = true;
     } catch (e) { error = e.message; }
   }
-  res.status(200).json({ ok: true, ...payload, chatData: initalData, firestore: { enabled: !!db, persisted, error } });
+  res.status(200).json({ ok: true, ...payload, chatData: initialData, firestore: { enabled: !!db, persisted, error } });
 });
 
 // Check if a session exists
